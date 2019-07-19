@@ -9,11 +9,12 @@ import (
 )
 
 func main() {
-	fileOnly := flag.Bool("f", false, "-f (file only mode on)")
+	fileOnly := flag.Bool("f", true, "-f (file only mode on)")
 	splitter := flag.String("s", "-", `-s "-" (splitter you wang to use)`)
 	target := flag.Int("t", -1, "-t -1 (target section you wan't to remove)")
+	flag.Parse()
 
-	fis, err := ioutil.ReadDir("")
+	fis, err := ioutil.ReadDir(".")
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -23,6 +24,7 @@ func main() {
 			continue
 		}
 
+		ext := getExt(fi.Name())
 		strs := strings.Split(fi.Name(), *splitter)
 		strlength := len(strs)
 
@@ -34,10 +36,21 @@ func main() {
 		}
 
 		newFname := strings.Join(strs, *splitter)
+		if *target == -1 {
+			newFname = newFname + "." + ext
+		}
+		log.Println(fi.Name())
+		log.Println(newFname)
 		err := os.Rename(fi.Name(), newFname)
 		if err != nil {
 			log.Println(err)
 			continue
 		}
 	}
+}
+
+func getExt(fname string) (ext string) {
+	strs := strings.Split(fname, ".")
+	ext = strs[len(strs)-1]
+	return
 }
