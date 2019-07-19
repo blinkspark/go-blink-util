@@ -28,6 +28,10 @@ func main() {
 		strs := strings.Split(fi.Name(), *splitter)
 		strlength := len(strs)
 
+		if strlength <= 1 {
+			continue
+		}
+
 		//append(arr[:length+t],arr[length+t+1:length]...)
 		if *target < -1 {
 			strs = append(strs[:strlength+*target], strs[strlength+*target:]...)
@@ -36,7 +40,7 @@ func main() {
 		}
 
 		newFname := strings.Join(strs, *splitter)
-		if *target == -1 {
+		if *target == -1 && ext != "" {
 			newFname = newFname + "." + ext
 		}
 		log.Println(fi.Name())
@@ -51,6 +55,11 @@ func main() {
 
 func getExt(fname string) (ext string) {
 	strs := strings.Split(fname, ".")
-	ext = strs[len(strs)-1]
+	length := len(strs)
+	if length > 1 {
+		ext = strs[length-1]
+	} else {
+		return ""
+	}
 	return
 }
