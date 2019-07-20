@@ -18,7 +18,8 @@ import (
 var (
 	configPath string
 	outPath    string
-	pools      int
+	x265Params string
+	tune       string
 	shutdown   bool
 	newConfig  bool
 )
@@ -30,20 +31,26 @@ type Entry struct {
 	AudioEncoder string `json:"AudioEncoder"`
 	CRF          int    `json:"crf"`
 	Preset       string `json:"preset"`
+	Tune         string `json:"tune"`
 	X265Params   string `json:"x265-params"`
 	BV           string `json:"bv"`
+	BA           string `json:"ba"`
 }
 
 func NewEntry(input string) Entry {
-	return Entry{
+	ent := Entry{
 		Input:        input,
 		Output:       newOutName(input),
 		VideoEncoder: "libx265",
 		AudioEncoder: "copy",
 		CRF:          28,
-		Preset:       "medium",
-		X265Params:   fmt.Sprintf("pools=%d:ssim-rd=1", pools),
+		Preset:       "faster",
+		X265Params:   "",
 	}
+	if tune != "" {
+		ent.Tune = tune
+	}
+	return ent
 }
 
 func newOutName(input string) string {
@@ -76,8 +83,9 @@ func main() {
 	flag.StringVar(&configPath, "c", "config.json", "-c /path/to/config.json")
 	flag.StringVar(&outPath, "o", "tmp", "-o tmp (path of the output)")
 	flag.BoolVar(&newConfig, "n", false, "-n (create a new config.json file)")
-	flag.IntVar(&pools, "p", 8, "-p 8 (x265 param thread pool)")
 	flag.BoolVar(&shutdown, "shutdown", false, "-shutdown (shutdown when finished)")
+	flag.StringVar(&x265Params, "x265-params", "", "-x265-params (x265 params here)")
+	flag.StringVar(&tune, "tune", "", "-tune animation (tune here)")
 	flag.Parse()
 
 	config := &Config{}
@@ -123,18 +131,23 @@ func main() {
 		args := []string{
 			"-y", "-i",
 			entry.Input,
-			"-c:a",
-			entry.AudioEncoder,
-			"-c:v", entry.VideoEncoder,
+			"-c:a", entry.AudioEncoder,
 		}
+		// audio config
+		if entry.BA != "" {
+			args = append(args, "-b:a", entry.BA)
+		}
+
+		// video encoder
+		args = append(args, "-c:v", entry.VideoEncoder)
 		if entry.Preset != "" {
 			args = append(args, "-preset", entry.Preset)
 		}
 		if entry.VideoEncoder != "hevc_nvenc" {
 			args = append(args, "-crf", fmt.Sprintf("%d", entry.CRF))
-			if entry.X265Params != "" {
-				args = append(args, "-x265-params", entry.X265Params)
-			}
+		}
+		if entry.X265Params != "" && entry.VideoEncoder == "libx265" {
+			args = append(args, "-x265-params", entry.X265Params)
 		}
 		if entry.BV != "" {
 			args = append(args, "-b:v", entry.BV)
@@ -147,6 +160,7 @@ func main() {
 
 		fmt.Println("---------------------------------------------")
 		fmt.Printf("%d/%d %s->%s\n", i+1, entryCount, entry.Input, entry.Output)
+		fmt.Println(cmd.Args)
 
 		err := cmd.Run()
 		if err != nil {
