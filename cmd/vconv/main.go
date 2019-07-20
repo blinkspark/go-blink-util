@@ -45,10 +45,12 @@ func NewEntry(input string) Entry {
 		AudioEncoder: "copy",
 		CRF:          28,
 		Preset:       "faster",
-		X265Params:   "",
 	}
 	if tune != "" {
 		ent.Tune = tune
+	}
+	if x265Params != "" {
+		ent.X265Params = x265Params
 	}
 	return ent
 }
