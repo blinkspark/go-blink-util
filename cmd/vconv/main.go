@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"runtime"
 	"strings"
 
 	util "github.com/blinkspark/go-blink-util"
@@ -18,6 +19,8 @@ var (
 	configPath string
 	outPath    string
 	pools      int
+	shutdown   bool
+	newConfig  bool
 )
 
 type Entry struct {
@@ -57,16 +60,28 @@ type Config struct {
 	Entries []Entry `json:"entries"`
 }
 
+func isVideoFmt(fname string) bool {
+	if strings.HasSuffix(fname, ".mkv") || strings.HasSuffix(fname, ".mp4") ||
+		strings.HasSuffix(fname, ".rmvb") || strings.HasSuffix(fname, ".ts") ||
+		strings.HasSuffix(fname, ".flv") || strings.HasSuffix(fname, ".mpg") ||
+		strings.HasSuffix(fname, ".mpeg") || strings.HasSuffix(fname, ".rm") ||
+		strings.HasSuffix(fname, ".wmv") || strings.HasSuffix(fname, ".mov") ||
+		strings.HasSuffix(fname, ".webm") {
+		return true
+	}
+	return false
+}
+
 func main() {
-	n := false
 	flag.StringVar(&configPath, "c", "config.json", "-c /path/to/config.json")
 	flag.StringVar(&outPath, "o", "tmp", "-o tmp (path of the output)")
-	flag.BoolVar(&n, "n", false, "-n (create a new config.json file)")
+	flag.BoolVar(&newConfig, "n", false, "-n (create a new config.json file)")
 	flag.IntVar(&pools, "p", 8, "-p 8 (x265 param thread pool)")
+	flag.BoolVar(&shutdown, "shutdown", false, "-shutdown (shutdown when finished)")
 	flag.Parse()
 
 	config := &Config{}
-	if n {
+	if newConfig {
 
 		config.Entries = []Entry{}
 		files, err := ioutil.ReadDir(".")
@@ -75,7 +90,7 @@ func main() {
 		}
 		for i := 0; i < len(files); i++ {
 			f := files[i]
-			if f.IsDir() {
+			if f.IsDir() || !isVideoFmt(f.Name()) {
 				continue
 			}
 
@@ -138,5 +153,16 @@ func main() {
 			log.Println(err)
 		}
 		fmt.Println("---------------------------------------------")
+	}
+
+	if shutdown {
+		switch runtime.GOOS {
+		case "windows":
+			cmd := exec.Command("shutdown", "-s")
+			err := cmd.Run()
+			if err != nil {
+				log.Fatalln(err)
+			}
+		}
 	}
 }
