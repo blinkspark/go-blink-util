@@ -102,7 +102,7 @@ func newDoc(url string, retry int) (*goquery.Document, error) {
 
 func download(url string, oPath string) {
 	if oPath != "" {
-		reg := regexp.MustCompile("[ ~,]+")
+		reg := regexp.MustCompile("[ ~,|]+")
 		oPath = reg.ReplaceAllString(oPath, "_")
 		if util.Exists(oPath) && !override {
 			return
