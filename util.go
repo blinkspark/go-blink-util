@@ -1,6 +1,9 @@
 package go_blink_util
 
-import "log"
+import (
+	"log"
+	"os"
+)
 
 // CheckErr check the error
 func CheckErr(err error) {
@@ -11,3 +14,15 @@ func CheckErr(err error) {
 
 // just ignore everything
 func Ignore(any ...interface{}) {}
+
+// Exists is file exist
+func Exists(path string) bool {
+	_, err := os.Stat(path)
+	if err != nil {
+		if os.IsExist(err) {
+			return true
+		}
+		return false
+	}
+	return true
+}
