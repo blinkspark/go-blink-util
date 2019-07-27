@@ -115,12 +115,17 @@ func download(url string, oPath string) {
 	}
 
 	i := 1
+	curRetry := 0
 	var nextUrl = ""
 	var curUrl = url
 	for {
+		if curRetry >= retry {
+			break
+		}
 		doc, err := newDoc(curUrl, retry)
 		if err != nil {
 			log.Println(err)
+			curRetry++
 			continue
 		}
 
@@ -132,11 +137,13 @@ func download(url string, oPath string) {
 		imgResp, err := http.Get(imgUrl)
 		if err != nil {
 			log.Println(err)
+			curRetry++
 			continue
 		}
 
 		if imgResp.StatusCode != http.StatusOK {
 			log.Println(imgResp.Status, "retry!")
+			curRetry++
 			continue
 		}
 
@@ -146,12 +153,14 @@ func download(url string, oPath string) {
 		imgData, err := ioutil.ReadAll(imgResp.Body)
 		if err != nil {
 			log.Println(err)
+			curRetry++
 			continue
 		}
 
 		err = ioutil.WriteFile(out, imgData, 0666)
 		if err != nil {
 			log.Println(err)
+			curRetry++
 			continue
 		}
 
@@ -163,6 +172,7 @@ func download(url string, oPath string) {
 
 		curUrl = nextUrl
 		i++
+		curRetry = 0
 	}
 }
 
