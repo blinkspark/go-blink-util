@@ -43,6 +43,8 @@ func main() {
 func handleGDoc(doc *goquery.Document) {
 	href, _ := doc.Find(".gdtm").First().Find("a").Attr("href")
 	gn := doc.Find("#gn").Text()
+	reg := regexp.MustCompile(`[ /\\:*?;'"<>|@#$]+`)
+	gn = reg.ReplaceAllString(gn, "_")
 
 	download(href, path.Join(outPath, gn))
 }
@@ -102,8 +104,6 @@ func newDoc(url string, retry int) (*goquery.Document, error) {
 
 func download(url string, oPath string) {
 	if oPath != "" {
-		reg := regexp.MustCompile(`[ /\\:*?;'"<>|@#$]+`)
-		oPath = reg.ReplaceAllString(oPath, "_")
 		if util.Exists(oPath) && !override {
 			return
 		}
