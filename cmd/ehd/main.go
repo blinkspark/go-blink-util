@@ -120,7 +120,7 @@ func download(url string, oPath string) {
 	var curUrl = url
 	for {
 		if curRetry >= retry {
-			break
+			continue
 		}
 		doc, err := newDoc(curUrl, retry)
 		if err != nil {
