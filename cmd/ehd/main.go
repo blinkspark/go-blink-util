@@ -120,7 +120,7 @@ func download(url string, oPath string) {
 	var curUrl = url
 	for {
 		if curRetry >= retry {
-			continue
+			curRetry = -1
 		}
 		doc, err := newDoc(curUrl, retry)
 		if err != nil {
@@ -132,6 +132,19 @@ func download(url string, oPath string) {
 		log.Println("downloading:", curUrl)
 
 		imgNode := doc.Find("#img")
+
+		nextUrl, _ = imgNode.Parent().Attr("href")
+		if nextUrl == curUrl {
+			log.Println("Done")
+			break
+		}
+
+		if curRetry < 0 {
+			curUrl = nextUrl
+			i++
+			curRetry = 0
+			continue
+		}
 
 		imgUrl, _ := imgNode.Attr("src")
 		imgResp, err := http.Get(imgUrl)
@@ -162,12 +175,6 @@ func download(url string, oPath string) {
 			log.Println(err)
 			curRetry++
 			continue
-		}
-
-		nextUrl, _ = imgNode.Parent().Attr("href")
-		if nextUrl == curUrl {
-			log.Println("Done")
-			break
 		}
 
 		curUrl = nextUrl
