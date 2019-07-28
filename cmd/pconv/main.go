@@ -8,6 +8,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
+	"time"
 
 	util "github.com/blinkspark/go-blink-util"
 )
@@ -16,17 +18,26 @@ var (
 	needDelete bool
 	targetPath string
 	quality    int
+	threads    int
+)
+
+var (
+	pool chan string
+	wg   sync.WaitGroup
 )
 
 func initFlags() {
 	flag.BoolVar(&needDelete, "delete", false, "-delete (switch on delete source mode)")
 	flag.StringVar(&targetPath, "t", ".", "-t /path/to/in")
 	flag.IntVar(&quality, "q", 100, "-q QUALITY")
+	flag.IntVar(&threads, "th", 2, "-th THREADS")
 	flag.Parse()
 }
 
 func main() {
 	initFlags()
+
+	pool = make(chan string, threads)
 
 	convList := make([]string, 0)
 
@@ -49,9 +60,27 @@ func main() {
 	})
 	util.CheckErr(err)
 
-	for _, t := range convList {
-		convert(t)
+	go func() {
+		wg.Add(1)
+		for _, t := range convList {
+			pool <- t
+		}
+		wg.Done()
+	}()
+
+	for i := 0; i < threads; i++ {
+		go func() {
+			wg.Add(1)
+			for t := range pool {
+				convert(t)
+			}
+			wg.Done()
+		}()
 	}
+
+	time.Sleep(time.Second)
+
+	wg.Wait()
 }
 
 func isImg(path string) bool {
