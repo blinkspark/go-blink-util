@@ -14,6 +14,7 @@ import (
 
 var (
 	needDelete bool
+	lossless   bool
 	targetPath string
 	quality    int
 	threads    int
@@ -26,6 +27,7 @@ var (
 
 func initFlags() {
 	flag.BoolVar(&needDelete, "delete", false, "-delete (switch on delete source mode)")
+	flag.BoolVar(&lossless, "lossless", false, "-lossless (switch on lossless mode)")
 	flag.StringVar(&targetPath, "t", ".", "-t /path/to/in")
 	flag.IntVar(&quality, "q", 100, "-q QUALITY")
 	flag.IntVar(&threads, "th", 2, "-th THREADS")
@@ -98,7 +100,11 @@ func getOutName(path string) string {
 }
 
 func convert(path string) {
-	args := []string{"-y", "-i", path, "-quality", fmt.Sprintf("%d", quality), getOutName(path)}
+	args := []string{"-y", "-i", path}
+	if lossless {
+		args = append(args, "-lossless", "1")
+	}
+	args = append(args, "-quality", fmt.Sprintf("%d", quality), getOutName(path))
 
 	cmd := exec.Command("ffmpeg", args...)
 	cmd.Stdout = os.Stdout
