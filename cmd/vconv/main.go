@@ -16,13 +16,13 @@ import (
 )
 
 var (
-	configPath string
-	outPath    string
-	x265Params string
-	tune       string
-	shutdown   bool
-	newConfig  bool
-	preset     string
+	configPath   string
+	outPath      string
+	x265Params   string
+	tune         string
+	shutdown     bool
+	newConfig    bool
+	paramsPreset string
 )
 
 const (
@@ -36,7 +36,7 @@ type Entry struct {
 	VideoEncoder string `json:"VideoEncoder"`
 	AudioEncoder string `json:"AudioEncoder"`
 	CRF          int    `json:"crf"`
-	Preset       string `json:"preset"`
+	Preset       string `json:"paramsPreset"`
 	Tune         string `json:"tune"`
 	X265Params   string `json:"x265-params"`
 	BV           string `json:"bv"`
@@ -55,8 +55,8 @@ func NewEntry(input string) Entry {
 	if tune != "" {
 		ent.Tune = tune
 	}
-	if preset != "" {
-		switch preset {
+	if paramsPreset != "" {
+		switch paramsPreset {
 		case "2k+":
 			ent.X265Params = preset2kp
 			break
@@ -103,7 +103,7 @@ func main() {
 	flag.BoolVar(&shutdown, "shutdown", false, "-shutdown (shutdown when finished)")
 	flag.StringVar(&x265Params, "x265-params", "", "-x265-params (x265 params here)")
 	flag.StringVar(&tune, "tune", "", "-tune animation (tune here)")
-	flag.StringVar(&preset, "preset", "1080p", "-preset 1080p (now 1080p and 2k+)")
+	flag.StringVar(&paramsPreset, "params-preset", "1080p", "-paramsPreset 1080p (now 1080p and 2k+)")
 	flag.Parse()
 
 	config := &Config{}
@@ -159,7 +159,7 @@ func main() {
 		// video encoder
 		args = append(args, "-c:v", entry.VideoEncoder)
 		if entry.Preset != "" && entry.VideoEncoder != "copy" {
-			args = append(args, "-preset", entry.Preset)
+			args = append(args, "-paramsPreset", entry.Preset)
 		}
 		if entry.VideoEncoder != "hevc_nvenc" && entry.VideoEncoder != "copy" {
 			args = append(args, "-crf", fmt.Sprintf("%d", entry.CRF))
