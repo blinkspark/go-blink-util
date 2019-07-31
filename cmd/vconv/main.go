@@ -36,7 +36,7 @@ type Entry struct {
 	VideoEncoder string `json:"VideoEncoder"`
 	AudioEncoder string `json:"AudioEncoder"`
 	CRF          int    `json:"crf"`
-	Preset       string `json:"paramsPreset"`
+	Preset       string `json:"preset"`
 	Tune         string `json:"tune"`
 	X265Params   string `json:"x265-params"`
 	BV           string `json:"bv"`
