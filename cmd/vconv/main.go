@@ -159,7 +159,7 @@ func main() {
 		// video encoder
 		args = append(args, "-c:v", entry.VideoEncoder)
 		if entry.Preset != "" && entry.VideoEncoder != "copy" {
-			args = append(args, "-paramsPreset", entry.Preset)
+			args = append(args, "-preset", entry.Preset)
 		}
 		if entry.VideoEncoder != "hevc_nvenc" && entry.VideoEncoder != "copy" {
 			args = append(args, "-crf", fmt.Sprintf("%d", entry.CRF))
