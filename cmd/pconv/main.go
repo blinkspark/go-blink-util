@@ -10,8 +10,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	util "github.com/blinkspark/go-blink-util"
 )
 
 var (
@@ -39,32 +37,31 @@ func main() {
 
 	pool = make(chan string, threads)
 
-	convList := make([]string, 0)
-
-	err := filepath.Walk(targetPath, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			log.Println(err)
-			return nil
-		}
-		if info.IsDir() {
-			return nil
-		}
-
-		if !isImg(path) {
-			return nil
-		}
-
-		convList = append(convList, path)
-
-		return nil
-	})
-	util.CheckErr(err)
-
 	go func() {
 		wg.Add(1)
-		for _, t := range convList {
-			pool <- t
-		}
+		//for _, t := range convList {
+		//	pool <- t
+		//}
+
+		_ = filepath.Walk(targetPath, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				log.Println(err)
+				return nil
+			}
+			if info.IsDir() {
+				return nil
+			}
+
+			if !isImg(path) {
+				return nil
+			}
+
+			pool <- path
+
+			return nil
+		})
+
+		close(pool)
 		wg.Done()
 	}()
 

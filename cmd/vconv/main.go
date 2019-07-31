@@ -22,6 +22,12 @@ var (
 	tune       string
 	shutdown   bool
 	newConfig  bool
+	preset     string
+)
+
+const (
+	preset1080p = "deblock=-1,-1:no-sao=1:ctu=32:qg-size=8:me=3:subme=4:me-range=38:b-intra=1:no-rect=1:ref=4:weghtb=1:bframes=8:rc-lookahead=60:rd=3:aq-mode=2:aq-strength=0.9:psy-rd=2:pbratio=1.2:cbqpoffs=-2:qcomp=0.65"
+	preset2kp   = "deblock=-1,-1:no-sao=1:ctu=32:qg-size=8:me=3:subme=4:me-range=38:b-intra=1:rect=1:amp=1:ref=4:weghtb=1:bframes=8:rc-lookahead=60:rd=3:aq-mode=2:aq-strength=0.9:psy-rd=2:pbratio=1.2:cbqpoffs=-2:qcomp=0.65"
 )
 
 type Entry struct {
@@ -49,8 +55,17 @@ func NewEntry(input string) Entry {
 	if tune != "" {
 		ent.Tune = tune
 	}
+	if preset != "" {
+		switch preset {
+		case "2k+":
+			ent.X265Params = preset2kp
+			break
+		default:
+			ent.X265Params = preset1080p
+		}
+	}
 	if x265Params != "" {
-		ent.X265Params = x265Params
+		ent.X265Params = ent.X265Params + ":" + x265Params
 	}
 	return ent
 }
@@ -88,6 +103,7 @@ func main() {
 	flag.BoolVar(&shutdown, "shutdown", false, "-shutdown (shutdown when finished)")
 	flag.StringVar(&x265Params, "x265-params", "", "-x265-params (x265 params here)")
 	flag.StringVar(&tune, "tune", "", "-tune animation (tune here)")
+	flag.StringVar(&preset, "preset", "1080p", "-preset 1080p (now 1080p and 2k+)")
 	flag.Parse()
 
 	config := &Config{}
