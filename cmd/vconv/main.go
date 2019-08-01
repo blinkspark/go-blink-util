@@ -26,8 +26,8 @@ var (
 )
 
 const (
-	preset1080p = "deblock=-1,-1:no-sao=1:ctu=32:qg-size=8:me=3:subme=4:me-range=38:b-intra=1:no-rect=1:ref=4:weghtb=1:bframes=8:rc-lookahead=60:rd=3:aq-mode=2:aq-strength=0.9:psy-rd=2:pbratio=1.2:cbqpoffs=-2:qcomp=0.65"
-	preset2kp   = "deblock=-1,-1:no-sao=1:ctu=32:qg-size=8:me=3:subme=4:me-range=38:b-intra=1:rect=1:amp=1:ref=4:weghtb=1:bframes=8:rc-lookahead=60:rd=3:aq-mode=2:aq-strength=0.9:psy-rd=2:pbratio=1.2:cbqpoffs=-2:qcomp=0.65"
+	preset1080p = "deblock=-1,-1:no-sao=1:ctu=32:qg-size=8:me=3:subme=4:me-range=38:b-intra=1:no-rect=1:ref=4:weghtb=1:bframes=8:rc-lookahead=60:rd=3:aq-mode=2:aq-strength=0.9:psy-rd=2:psy-rdoq=1.0:pbratio=1.2:cbqpoffs=-2:qcomp=0.65"
+	preset2kp   = "deblock=-1,-1:no-sao=1:ctu=32:qg-size=8:me=3:subme=4:me-range=38:b-intra=1:rect=1:amp=1:ref=4:weghtb=1:bframes=8:rc-lookahead=60:rd=3:aq-mode=2:aq-strength=0.9:psy-rd=2:psy-rdoq=1.0:pbratio=1.2:cbqpoffs=-2:qcomp=0.65"
 )
 
 type Entry struct {
