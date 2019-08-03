@@ -26,8 +26,8 @@ var (
 )
 
 const (
-	preset1080p = "no-sao=1:ctu=32:qg-size=8:me=3:subme=3:me-range=38:ref=4:bframes=8:rc-lookahead=60:rd=3:aq-mode=2:psy-rdoq=1.0:cbqpoffs=-2:crqpoffs=-2"
-	preset2kp   = "no-sao=1:ctu=32:qg-size=8:me=3:subme=3:me-range=57:ref=4:bframes=8:rc-lookahead=60:rd=3:aq-mode=2:psy-rdoq=1.0:cbqpoffs=-2:crqpoffs=-2"
+	preset1080p = "no-sao=1:ctu=32:qg-size=8:me=3:subme=3:me-range=38:ref=4:bframes=8:rc-lookahead=60:rd=3:psy-rdoq=1.0:cbqpoffs=-2:crqpoffs=-2"
+	preset2kp   = "no-sao=1:ctu=32:qg-size=8:me=3:subme=3:me-range=57:ref=4:bframes=8:rc-lookahead=60:rd=3:psy-rdoq=1.0:cbqpoffs=-2:crqpoffs=-2"
 )
 
 type Entry struct {
