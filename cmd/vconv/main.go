@@ -11,6 +11,7 @@ import (
 	"path"
 	"runtime"
 	"strings"
+	"sync"
 
 	util "github.com/blinkspark/go-blink-util"
 )
@@ -23,6 +24,7 @@ var (
 	shutdown     bool
 	newConfig    bool
 	paramsPreset string
+	threads      int
 )
 
 const (
@@ -104,6 +106,7 @@ func main() {
 	flag.StringVar(&x265Params, "x265-params", "", "-x265-params (x265 params here)")
 	flag.StringVar(&tune, "tune", "", "-tune animation (tune here)")
 	flag.StringVar(&paramsPreset, "params-preset", "1080p", "-paramsPreset 1080p (now 1080p and 2k+)")
+	flag.IntVar(&threads, "th", 1, "-th THREADS")
 	flag.Parse()
 
 	config := &Config{}
@@ -137,55 +140,70 @@ func main() {
 	util.CheckErr(err)
 
 	entryCount := len(config.Entries)
-	for i := 0; i < entryCount; i++ {
-		entry := config.Entries[i]
-		dir := path.Dir(entry.Output)
-		if _, err := os.Stat(dir); os.IsNotExist(err) {
-			err := os.MkdirAll(dir, os.ModeDir)
-			if err != nil {
-				log.Fatal(err)
-			}
-		}
-		args := []string{
-			"-y", "-i",
-			entry.Input,
-			"-c:a", entry.AudioEncoder,
-		}
-		// audio config
-		if entry.BA != "" {
-			args = append(args, "-b:a", entry.BA)
-		}
 
-		// video encoder
-		args = append(args, "-c:v", entry.VideoEncoder)
-		if entry.Preset != "" && entry.VideoEncoder != "copy" {
-			args = append(args, "-preset", entry.Preset)
-		}
-		if entry.VideoEncoder != "hevc_nvenc" && entry.VideoEncoder != "copy" {
-			args = append(args, "-crf", fmt.Sprintf("%d", entry.CRF))
-		}
-		if entry.X265Params != "" && entry.VideoEncoder == "libx265" {
-			args = append(args, "-x265-params", entry.X265Params)
-		}
-		if entry.BV != "" {
-			args = append(args, "-b:v", entry.BV)
-		}
-		args = append(args, entry.Output)
-		cmd := exec.Command("ffmpeg", args...)
-
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-
-		fmt.Println("---------------------------------------------")
-		fmt.Printf("%d/%d %s->%s\n", i+1, entryCount, entry.Input, entry.Output)
-		fmt.Println(cmd.Args)
-
-		err := cmd.Run()
-		if err != nil {
-			log.Println(err)
-		}
-		fmt.Println("---------------------------------------------")
+	pool := make(chan Entry, entryCount)
+	for _, entry := range config.Entries {
+		pool <- entry
 	}
+	close(pool)
+
+	var wg sync.WaitGroup
+	for i := 0; i < threads; i++ {
+		wg.Add(1)
+		go func() {
+			for entry := range pool {
+				dir := path.Dir(entry.Output)
+				if _, err := os.Stat(dir); os.IsNotExist(err) {
+					err := os.MkdirAll(dir, os.ModeDir)
+					if err != nil {
+						log.Fatal(err)
+					}
+				}
+				args := []string{
+					"-y", "-i",
+					entry.Input,
+					"-c:a", entry.AudioEncoder,
+				}
+				// audio config
+				if entry.BA != "" {
+					args = append(args, "-b:a", entry.BA)
+				}
+
+				// video encoder
+				args = append(args, "-c:v", entry.VideoEncoder)
+				if entry.Preset != "" && entry.VideoEncoder != "copy" {
+					args = append(args, "-preset", entry.Preset)
+				}
+				if entry.VideoEncoder != "hevc_nvenc" && entry.VideoEncoder != "copy" {
+					args = append(args, "-crf", fmt.Sprintf("%d", entry.CRF))
+				}
+				if entry.X265Params != "" && entry.VideoEncoder == "libx265" {
+					args = append(args, "-x265-params", entry.X265Params)
+				}
+				if entry.BV != "" {
+					args = append(args, "-b:v", entry.BV)
+				}
+				args = append(args, entry.Output)
+				cmd := exec.Command("ffmpeg", args...)
+
+				cmd.Stdout = os.Stdout
+				cmd.Stderr = os.Stderr
+
+				fmt.Println("---------------------------------------------")
+				fmt.Printf("%d/%d %s->%s\n", i+1, entryCount, entry.Input, entry.Output)
+				fmt.Println(cmd.Args)
+
+				err := cmd.Run()
+				if err != nil {
+					log.Println(err)
+				}
+				fmt.Println("---------------------------------------------")
+			}
+			wg.Done()
+		}()
+	}
+
+	wg.Wait()
 
 	if shutdown {
 		switch runtime.GOOS {
