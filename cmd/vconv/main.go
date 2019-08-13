@@ -151,6 +151,7 @@ func main() {
 	for i := 0; i < threads; i++ {
 		wg.Add(1)
 		go func() {
+			count := 0
 			for entry := range pool {
 				dir := path.Dir(entry.Output)
 				if _, err := os.Stat(dir); os.IsNotExist(err) {
@@ -190,8 +191,9 @@ func main() {
 				cmd.Stderr = os.Stderr
 
 				fmt.Println("---------------------------------------------")
-				fmt.Printf("%d/%d %s->%s\n", i+1, entryCount, entry.Input, entry.Output)
+				fmt.Printf("%d/%d %s->%s\n", count+1, entryCount, entry.Input, entry.Output)
 				fmt.Println(cmd.Args)
+				count++
 
 				err := cmd.Run()
 				if err != nil {
